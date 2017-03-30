@@ -303,7 +303,7 @@ class PROFILE_GUI():
                                           command=lambda: self.error_check()))
         self.__btns.append(tkinter.Button(self.__frames[0], text="Switch",
                                           font=self.__textFont,
-                                          command=lambda: self.fname_check()))
+                                          command=lambda: self.perform_switch()))
         self.__entries[self.__rowCounter - 1].grid(row=self.__rowCounter,
                                                    column=0, sticky="wens")
         self.__btns[0].grid(row=self.__rowCounter, column=1, sticky="wens")
@@ -315,8 +315,7 @@ class PROFILE_GUI():
         self.change_content(content)
 
 
-    ## NEED TO CHECK IF THIS IS HANDLED PROPERLY
-    def fname_check(self):
+    def perform_switch(self):
         with open("lastProfile.txt", "w") as write_switch:
             write_switch.write(str(self.__switchFile.get()))
         write_switch.close()

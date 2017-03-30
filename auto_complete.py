@@ -1,4 +1,5 @@
 import datetime
+import threading
 import time
 import tkinter
 import tkinter.font as Tkfont
@@ -12,14 +13,16 @@ SLEEP_TIME = 0.5
 
 class LIST_GUI():
     def __init__(self):
-        self.loadProfile(True)
+        # initialize the recommended words GUI
+        self.__gui = tkinter.Tk()
+        self.loadProfile()
 
     # switches from curr profile to nextFile profile
-    def changeProfile(self, nextFile, readDict):
+    def changeProfile(self, nextFile):
         self.closeProfile(nextFile)
-        self.loadProfile(readDict)
+        self.loadProfile()
 
-    def loadProfile(self, readDict):
+    def loadProfile(self):
         # next_word is the word currently being typed by user
         self.__next_word = ""
         # rec is a list of recommended words
@@ -28,26 +31,26 @@ class LIST_GUI():
         self.__num = []
         # MAGIC_NUM is the number of recommended words
         self.__MAGIC_NUM = 4
-        # the dictionary of words and corresponding word counts from user
-        self.__dict = {}
-        # number of words typed by user so far
-        self.__num_words = 0
-        # amount of time spent by user typing so far
-        self.__old_time = 0.0
         # filename storing current profile
         self.__profile = ""
         # options on rec word buttons when next_word is empty string
         self.__options = ["ABOUT", "TUTORIAL", "PROFILES", "EXIT"]
         # fixed buttons
         self.__fixedBtns = ["Space", "Back", "Return"]
+        # the dictionary of words and corresponding word counts from user
+        self.__dict = {}
+        # number of words typed by user so far
+        self.__num_words = 0
+        # amount of time spent by user typing so far
+        self.__old_time = 0.0
+        # generated hasAutoTyped flag
+        self.__hasAutoTyped = False
         # generated tab flag
         self.__hasTabbed = False
         # generated switch flag
         self.__hasSwitched = False
         # generated addPreviews flag
         self.__addPreviews = False
-        # initialize the recommended words GUI
-        self.__gui = tkinter.Tk()
         self.__mainframe = tkinter.Frame(self.__gui)
         self.__mainframe.grid(row=5, column=5)
         self.__defaultbg = self.__gui.cget('bg')
@@ -63,8 +66,6 @@ class LIST_GUI():
                            "Clear", "Numpad6", "Right", "Numpad1","End",
                            "Numpad2", "Down", "Numpad3", "Next", "Numpad0",
                            "Insert", "Decimal", "Delete"]
-        #self.__custTypes = ["*", "-", "+", "7", "8", "9", "4", "5", "6", "1",
-        #                    "2", "3", "0", "."]
         self.__SWITCH = 0
         self.__CAPS = 0
         self.__PAGES = []
@@ -146,8 +147,13 @@ class LIST_GUI():
             self.__num_words = int(content[0].split(' ')[0])
             self.__old_time = float(content[0].split(' ')[1])
             for j in range(1, len(content)):
-                self.__dict[str(content[j].split(' ')[0])] = \
-                    int(content[j].split(' ')[1])
+                temp_word = str(content[j].split(' ')[0])
+                temp_count = int(content[j].split(' ')[1])
+                if temp_word in self.__dict:
+                    print("already here")
+                    self.__dict[temp_word] += temp_count
+                else:
+                    self.__dict[temp_word] = temp_count
         dict_read.close()
         # initialize NumLock button
         self.__btns.append(tkinter.Button(
@@ -328,6 +334,8 @@ class LIST_GUI():
             save_prof.seek(0)
             save_prof.write(nextProfile)
         save_prof.close()
+        for idx in range(0, 7):
+            self.__frames[idx].grid_forget()
 
     # Called when user finishes typing or selecting a word
     def updateDict(self, event):
@@ -473,51 +481,22 @@ class LIST_GUI():
         elif idx is not 1:
             self.__btns[idx].configure(bg=self.__defaultbg)
 
-    # creates another window corresponding to selected option
-    # NOT COMPLETED.....
+    # TUTORIAL NOT COMPLETED.....
     def systemCall(self, optionIdx):
         if optionIdx is 0:
-            about = tkinter.Toplevel(self.__gui)
-            about_course = tkinter.Label(about, text="EECS 481 SECTION 002",
-                                        font=self.__fonts[0])
-            about_group = tkinter.Label(about, text="ONE-TIME KEYPAD (2017)",
-                                        font=self.__fonts[0])
-            about_contact = tkinter.Label(about, text="CONTACT INFORMATION",
-                                          font=self.__fonts[0])
-            about_mem1 = tkinter.Label(about,
-                                       text="Zhenren Lu: zhenrenl@umich.edu",
-                                       font=self.__fonts[0])
-            about_mem2 = tkinter.Label(about,
-                                       text="Surab Shrestha: sbshrest@umich.edu",
-                                       font=self.__fonts[0])
-            about_mem3 = tkinter.Label(about,
-                                       text="Arjun Saxena: arjunsax@umich.edu",
-                                       font=self.__fonts[0])
-            about_mem4 = tkinter.Label(about,
-                                       text="Parth Joshi: pgjoshi@umich.edu",
-                                       font=self.__fonts[0])
-            about_course.grid(row=0, sticky="wens")
-            about_group.grid(row=1, sticky="wens")
-            about_contact.grid(row=2, sticky="wens")
-            about_mem1.grid(row=3, sticky="wens")
-            about_mem2.grid(row=4, sticky="wens")
-            about_mem3.grid(row=5, sticky="wens")
-            about_mem4.grid(row=6, sticky="wens")
+            info = threading.Thread(target=self.about_us)
+            info.start()
+            info.join()
         elif optionIdx is 1:
             tutorial = tkinter.Toplevel(self.__gui)
             tutorial_title = tkinter.Label(tutorial, text="TUTORIAL",
                                            font=self.__fonts[0])
             tutorial_title.grid(row=0, sticky="wens")
         elif optionIdx is 2:
-            os.system("profile.py")
-            temp_profile = ""
-            with open("lastProfile.txt", "r") as read_lp:
-                temp_profile += read_lp.readline()
-            read_lp.close()
-            if(temp_profile != self.__profile):
-                self.changeProfile(temp_profile, True)
-            else:
-                self.changeProfile(temp_profile, False)
+            profiling = threading.Thread(target=self.profile_manager)
+            profiling.start()
+            profiling.join()
+            print("done with prof man")
         elif optionIdx is 3:
             sys.exit()
 
@@ -566,6 +545,7 @@ class LIST_GUI():
                 if(self.__next_word != recWord):
                     k.type_string(recWord[len(self.__next_word): len(recWord)])
                 self.updateDict(recWord)
+                self.__hasAutoTyped = True
             elif(len(self.__next_word) is 0):
                 self.flash(idx + 19, True)
                 #self.systemCall(idx)
@@ -639,7 +619,10 @@ class LIST_GUI():
         elif event.Key in self.__hotkeys:
             idx = self.__hotkeys.index(event.Key)
             self.flash(idx + 19, False)
-            self.systemCall(idx)
+            if(self.__hasAutoTyped):
+                self.__hasAutoTyped = False
+            else:
+                self.systemCall(idx)
             del k
             return False
         elif event.Key in self.__fixedBtns:
@@ -681,6 +664,8 @@ class LIST_GUI():
         # shorten currently typed word by 1 char if not the empty string
         if str(event) == "Back" and len(self.__next_word) > 0:
             self.__next_word = self.__next_word[0: len(self.__next_word) - 1]
+            if(len(self.__next_word) is 0):
+                self.updateList(True)
         elif str(event).isalnum() and len(str(event)) is 1:
             self.__next_word += str(event)
             self.searchDict()
@@ -700,6 +685,561 @@ class LIST_GUI():
                     # tests 'user input' on rec word list GUI system
                     self.auto_complete(str(word))
             open_input.close()
+
+    def about_us(self):
+        about = tkinter.Toplevel(self.__gui)
+        about_course = tkinter.Label(about, text="EECS 481 SECTION 002",
+                                     font=self.__fonts[0])
+        about_group = tkinter.Label(about, text="ONE-TIME KEYPAD (2017)",
+                                    font=self.__fonts[0])
+        about_contact = tkinter.Label(about, text="CONTACT INFORMATION",
+                                      font=self.__fonts[0])
+        about_mem1 = tkinter.Label(about,
+                                   text="Zhenren Lu: zhenrenl@umich.edu",
+                                   font=self.__fonts[0])
+        about_mem2 = tkinter.Label(about,
+                                   text="Surab Shrestha: sbshrest@umich.edu",
+                                   font=self.__fonts[0])
+        about_mem3 = tkinter.Label(about,
+                                   text="Arjun Saxena: arjunsax@umich.edu",
+                                   font=self.__fonts[0])
+        about_mem4 = tkinter.Label(about,
+                                   text="Parth Joshi: pgjoshi@umich.edu",
+                                   font=self.__fonts[0])
+        about_course.grid(row=0, sticky="wens")
+        about_group.grid(row=1, sticky="wens")
+        about_contact.grid(row=2, sticky="wens")
+        about_mem1.grid(row=3, sticky="wens")
+        about_mem2.grid(row=4, sticky="wens")
+        about_mem3.grid(row=5, sticky="wens")
+        about_mem4.grid(row=6, sticky="wens")
+
+    def profile_manager(self):
+            self.__profman = tkinter.Toplevel(self.__gui)
+            self.__pmlabels = []
+            self.__pmerrors = []
+            self.__pmentries = []
+            self.__pmerrorLabels = []
+            # init list of profiles
+            self.__prof_list = []
+            self.__dict_list = []
+            self.__pmframes = []
+            self.__pmbtns = []
+            self.__pmcurrProf = ""
+            self.__pmtextFont = tkinter.font.Font(size=14)
+            self.__pmerrFont = tkinter.font.Font(size=12)
+            self.__rowCounter = 0
+            self.__startPageIdx = 0
+
+            # get current profile from lastProfile.txt
+            with open("lastProfile.txt", "r") as read_lp:
+                self.__pmcurrProf = read_lp.readline()
+
+            # generate list of profiles
+            for fn in os.listdir('.'):
+                if ((str(fn).find("profile") == 0) and
+                        (str(fn).find(".txt") == (len(str(fn)) - 4))):
+                    self.__prof_list.append(str(fn))
+                elif ((str(fn).find("dict_profile") == 0) and
+                          (str(fn).find(".txt") == (len(str(fn)) - 4))):
+                    self.__dict_list.append(str(fn))
+
+            self.__pmframes.append(tkinter.Frame(self.__profman))
+            self.__pmframes.append(tkinter.Frame(self.__profman))
+
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Filename",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="GUI header",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Text size",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # preview size
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Preview size",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # button height
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Button height",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # button width
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Button width",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # transparency index
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Transparency",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+            # flash color
+            self.__pmflash = tkinter.StringVar(self.__pmframes[0])
+            self.__pmflash.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Flash color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmflash,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # caps color
+            self.__pmcaps = tkinter.StringVar(self.__pmframes[0])
+            self.__pmcaps.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Caps color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmcaps,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # map id text color
+            self.__pmmapidText = tkinter.StringVar(self.__pmframes[0])
+            self.__pmmapidText.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="MapID text color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmmapidText,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # map id bg color
+            self.__pmmapidBg = tkinter.StringVar(self.__pmframes[0])
+            self.__pmmapidBg.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="MapID color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmmapidBg,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # key bg color
+            self.__pmkeyBg = tkinter.StringVar(self.__pmframes[0])
+            self.__pmkeyBg.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Key color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmkeyBg,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # key text color
+            self.__pmkeyText = tkinter.StringVar(self.__pmframes[0])
+            self.__pmkeyText.set("white")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Key text color",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmkeyText,
+                                                     "white",
+                                                     "yellow",
+                                                     "black",
+                                                     "orange",
+                                                     "pink",
+                                                     "green"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            # preview boolean flag
+            self.__pmshow = tkinter.StringVar(self.__pmframes[0])
+            self.__pmshow.set("Yes")
+            self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                               text="Show labels?",
+                                               font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  column=0, sticky="wens")
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmshow,
+                                                     "Yes",
+                                                     "No"))
+            self.__pmentries[self.__rowCounter].grid(row=self.__rowCounter,
+                                                   column=1, columnspan=2,
+                                                   sticky="wens")
+            self.__rowCounter += 1
+
+            self.__pmlabels.append(
+                tkinter.Label(self.__pmframes[0],
+                              text="For each page, type 14 strings (with spaces " + '\n' +
+                                   "in between) that will correspond with the keys " + '\n' +
+                                   "* - + 7 8 9 4 5 6 1 2 3 0 .",
+                              font=self.__pmtextFont))
+            self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                  columnspan=3, sticky="wens")
+
+            self.__startPageIdx = self.__rowCounter
+            self.__rowCounter += 1
+
+            for x in range(0, 6):
+                self.__pmentries.append(tkinter.Entry(self.__pmframes[0]))
+                self.__pmlabels.append(tkinter.Label(self.__pmframes[0],
+                                                   text="Page " + str(x),
+                                                   font=self.__pmtextFont))
+                self.__pmlabels[self.__rowCounter].grid(row=self.__rowCounter,
+                                                      column=0, sticky="wens")
+                self.__pmentries[self.__rowCounter - 1].grid(row=self.__rowCounter,
+                                                           column=1, columnspan=2,
+                                                           sticky="wens")
+                self.__rowCounter += 1
+
+            self.__pmswitchFile = tkinter.StringVar(self.__pmframes[0])
+
+            self.__pmswitchFile.set(str(self.__pmcurrProf))
+            self.__pmswitchFile.trace("w", self.option_change)
+
+            # self.__profileOptionMenu = self.__rowCounter
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmswitchFile,
+                                                     *self.__prof_list))
+            self.__pmbtns.append(tkinter.Button(self.__pmframes[0], text="Save",
+                                              font=self.__pmtextFont,
+                                              command=lambda: self.error_check()))
+            self.__pmbtns.append(tkinter.Button(self.__pmframes[0], text="Switch",
+                                              font=self.__pmtextFont,
+                                              command=lambda: self.perform_switch()))
+            self.__pmentries[self.__rowCounter - 1].grid(row=self.__rowCounter,
+                                                       column=0, sticky="wens")
+            self.__pmbtns[0].grid(row=self.__rowCounter, column=1, sticky="wens")
+            self.__pmbtns[1].grid(row=self.__rowCounter, column=2, sticky="wens")
+            # put in row 1 so errors will show up in row 0 for self.__frames[1]
+            self.__pmframes[0].grid(row=1, sticky="wens")
+
+            content = self.get_profile_content(self.__pmcurrProf)
+            self.change_content(content)
+
+    def perform_switch(self):
+        #with open("lastProfile.txt", "w") as write_switch:
+        #    write_switch.write(str(self.__switchFile.get()))
+        #write_switch.close()
+        self.__profman.destroy()
+        self.changeProfile(str(self.__pmswitchFile.get()))
+
+
+    def error_check(self):
+            self.__pmframes[1].grid_forget()
+            # the frame ideally should remove itself
+            # from the grid before getting "deallocated"
+            # to prevent having extra unused space in the grid
+            self.__pmerrors = []
+            self.__pmerrorLabels = []
+            if str(self.__pmentries[0].get()) == "":
+                self.__pmerrors.append("Need a filename")
+            if len(self.__pmentries[1].get()) > 20:
+                self.__pmerrors.append("Header too long")
+            if len(self.__pmentries[1].get()) < 1:
+                self.__pmerrors.append("Header too short")
+            try:
+                ts = int(self.__pmentries[2].get())
+                if (ts < 8):
+                    self.__pmerrors.append("Text size too small")
+            except ValueError:
+                self.__pmerrors.append("Text size not an int")
+            try:
+                ps = int(self.__pmentries[3].get())
+                if (ps < 4):
+                    self.__pmerrors.append("Preview size too small")
+            except ValueError:
+                self.__pmerrors.append("Preview size not an int")
+            try:
+                bh = int(self.__pmentries[4].get())
+                if (bh < 1):
+                    self.__pmerrors.append("Button height too small")
+            except ValueError:
+                self.__pmerrors.append("Button height not an int")
+            try:
+                bw = int(self.__pmentries[5].get())
+                if (bw < 1):
+                    self.__pmerrors.append("Button width too small")
+            except ValueError:
+                self.__pmerrors.append("Button width not an int")
+            try:
+                ti = float(self.__pmentries[6].get())
+                if (ti < 0):
+                    self.__pmerrors.append("Transparency too small")
+                elif (ti > 1):
+                    self.__pmerrors.append("Transparency too large")
+            except ValueError:
+                self.__pmerrors.append("Transparency not a float")
+
+            for i in range(0, 6):
+                if len(str(self.__pmentries[self.__startPageIdx + i].get()).split(' ')) > 14:
+                    self.__pmerrors.append("Too many in page " + str(i))
+                elif len(str(self.__pmentries[self.__startPageIdx + i].get()).split(' ')) < 14:
+                    self.__pmerrors.append("Not enough in page " + str(i))
+            if len(self.__pmerrors) > 0:
+                self.__pmframes.pop()
+                self.__pmframes.append(tkinter.Frame(self.__gui))
+                err_thread = threading.Thread(target=self.print_errors)
+                err_thread.start()
+            else:
+                self.check_profile()
+
+    def check_profile(self):
+            for fn in os.listdir('.'):
+                if (str(fn) == ("profile" + str(self.__pmentries[0].get()) + ".txt")):
+                    self.__pmwarning = tkinter.Toplevel()
+                    self.__pmw_msg = tkinter.Label(self.__pmwarning, text="Do you want to overwrite " +
+                                                                      str(fn) + "?", font=self.__pmtextFont)
+                    self.__pmw_msg.grid(row=0, columnspan=2, sticky="wens")
+                    self.__pmw_cancel = tkinter.Button(self.__pmwarning, text="Cancel",
+                                                     font=self.__pmtextFont, command=lambda: self.dialog(False))
+                    self.__pmw_confirm = tkinter.Button(self.__pmwarning, text="Confirm",
+                                                      font=self.__pmtextFont, command=lambda: self.dialog(True))
+                    self.__pmw_cancel.grid(row=4, column=0, sticky="wens")
+                    self.__pmw_confirm.grid(row=4, column=1, sticky="wens")
+
+                    self.__pmradioSelect = tkinter.IntVar()
+                    self.__pmradioSelect.set(0)
+                    self.__pmradioYes = tkinter.Radiobutton(self.__pmwarning,
+                                                          text="Clear dictionary",
+                                                          font=self.__pmtextFont,
+                                                          variable=self.__pmradioSelect,
+                                                          value=1).grid(row=1, columnspan=2, sticky="wens")
+                    self.__pmradioNo = tkinter.Radiobutton(self.__pmwarning,
+                                                         text="Keep dictionary",
+                                                         font=self.__pmtextFont,
+                                                         variable=self.__pmradioSelect,
+                                                         value=0).grid(row=2, columnspan=2, sticky="wens")
+                    self.__pmradioAdd = tkinter.Radiobutton(self.__pmwarning,
+                                                          text="Append dictionary",
+                                                          font=self.__pmtextFont,
+                                                          variable=self.__pmradioSelect,
+                                                          value=2).grid(row=3, column=0, sticky="wens")
+                    self.__pmaddDict = tkinter.StringVar(self.__pmwarning)
+                    self.__pmaddDict.set(self.__dict_list[0])
+                    self.__pmdictlist = tkinter.OptionMenu(self.__pmwarning,
+                                                         self.__pmaddDict,
+                                                         *self.__dict_list).grid(row=3, column=1, sticky="wens")
+
+                    self.__pmwarning.columnconfigure(0, weight=1)
+                    self.__pmwarning.columnconfigure(1, weight=1)
+                    return
+            # added a new profile to current directory
+            self.__prof_list.append("profile" + str(self.__pmentries[0].get()) + ".txt")
+            self.__pmentries[self.__rowCounter - 1].grid_forget()
+            self.__pmentries.pop()
+            self.__pmentries.append(tkinter.OptionMenu(self.__pmframes[0],
+                                                     self.__pmswitchFile,
+                                                     *self.__prof_list))
+            self.__pmentries[self.__rowCounter - 1].grid(row=self.__rowCounter, column=0,
+                                                       sticky="wens")
+            self.create_profile(0)
+
+    def dialog(self, response):
+        self.__pmwarning.destroy()
+        if response is True:
+            self.create_profile(int(self.__pmradioSelect.get()))
+
+    def create_profile(self, dictOptIdx):
+            # dictOptIdx = 0 if keep dict, 1 if reset dict, 2 if add to dict
+            fn_suffix = "profile" + str(self.__pmentries[0].get()) + ".txt"
+            with open(fn_suffix, "w") as new_prof:
+                # write the non-mapping data
+                new_prof.write("dict_" + fn_suffix + '\n' +
+                               str(self.__pmentries[1].get()) + '\n' +
+                               str(self.__pmentries[2].get()) + " " +
+                               str(self.__pmentries[3].get()) + " " +
+                               str(self.__pmentries[4].get()) + " " +
+                               str(self.__pmentries[5].get()) + " " +
+                               str(self.__pmentries[6].get()) + " " +
+                               str(self.__pmflash.get()) + " " +
+                               str(self.__pmcaps.get()) + " " +
+                               str(self.__pmmapidText.get()) + " " +
+                               str(self.__pmmapidBg.get()) + " " +
+                               str(self.__pmkeyBg.get()) + " " +
+                               str(self.__pmkeyText.get()) + " " +
+                               str(self.__pmshow.get()))
+                # now write the mapping data
+                for t in range(0, 6):
+                    new_prof.write('\n' + "Switch CapsLock " +
+                                   str(self.__pmentries[self.__startPageIdx + t].get()))
+            new_prof.close()
+            if (dictOptIdx is 1):
+                with open("dict_" + fn_suffix, "w") as clear_dict:
+                    clear_dict.write("1 1 1")
+                clear_dict.close()
+            elif (dictOptIdx is 2):
+                with open(self.__pmaddDict.get(), "r") as read_otherdict:
+                    extras = [line.rstrip('\n') for line in read_otherdict]
+                    with open("dict_" + fn_suffix, "a") as append_dict:
+                        for i in range(1, len(extras)):
+                            append_dict.write('\n' + extras[i])
+                    append_dict.close()
+                read_otherdict.close()
+
+    def print_errors(self):
+        for i in range(0, len(self.__pmerrors)):
+            self.__pmerrorLabels.append(tkinter.Label(self.__pmframes[1],
+                                                    text=self.__pmerrors[i]))
+            self.__pmerrorLabels[i].grid(row=int(i / 3), column=(i % 3), sticky="wens")
+        self.__pmframes[1].grid(row=0, sticky="wens")
+
+    def option_change(self, *args):
+        contents = self.get_profile_content(self.__pmswitchFile.get())
+        self.change_content(contents)
+
+    def get_profile_content(self, file_name):
+        # gets information from last used profile
+        with open(file_name, "r") as get_prof_con:
+            content = [line.rstrip('\n') for line in get_prof_con]
+        get_prof_con.close()
+        return content
+
+    def change_content(self, content):
+            # profile name
+            self.__pmentries[0].delete(0, len(self.__pmentries[0].get()))
+            temp_file = self.__pmswitchFile.get()
+            show_file = temp_file[7:-4]
+            self.__pmentries[0].insert(0, show_file)
+            # GUI Header
+            self.__pmentries[1].delete(0, len(self.__pmentries[1].get()))
+            self.__pmentries[1].insert(0, str(content[1]))
+
+            format = [item.rstrip(' ') for item in str(content[2]).split(' ')]
+
+            for q in range(2, 7):
+                self.__pmentries[q].delete(0,
+                        len(self.__pmentries[q].get()))
+                self.__pmentries[q].insert(0, str(format[q - 2]))
+
+            # flash color
+            self.__pmflash.set(str(format[5]))
+
+            # caps color
+            self.__pmcaps.set(str(format[6]))
+
+            # map id text color
+            self.__pmmapidText.set(str(format[7]))
+
+            # map id bg color
+            self.__pmmapidBg.set(str(format[8]))
+
+            # map Key bg folor
+            self.__pmkeyBg.set(str(format[9]))
+
+            # map key text folor
+            self.__pmkeyText.set(str(format[10]))
+
+            # set
+            self.__pmshow.set(str(format[11]))
+
+            for i in range(0, 6):
+                remove_len = len("Switch CapsLock ")
+                temp_string = content[3 + i][remove_len:]
+                self.__pmentries[14 + i].delete(0, len(self.__pmentries[14 + i].get()))
+                self.__pmentries[14 + i].insert(0, temp_string)
 
 
 #if __name__ == "__main__":
