@@ -1,0 +1,12 @@
+User guide
+Pre-requisites: Windows 8 or higher and a USB drive.
+Starting the file:
+Upon plugging in the numpad, One Time-Keypad will start up and a virtual keypad will show up with several characters, some profile buttons and an exit button. Let’s call the virtual keypad the GUI.
+To press any character that appears on the GUI press the corresponding button on the numpad for it to appear on any application of choice.
+As the user types in words the user will be prompted with up to four auto-complete words. Upon pressing one of the four top most buttons, the corresponding auto-complete word will be selected and appear on the user’s application.
+The ‘switch’ button which corresponds to the num lock button, will cause the user to go back and forth between GUI mappings and display the next set of characters that the user can type.
+The ‘new profile’ button will open a separate window for the user to create a new ‘profile’. The profile can save information like GUI aesthetic settings (button size/color), key mappings and auto-complete word suggestions.
+The ‘open profile’ button lets the user open and possibly edit the settings of a pre-existing profile.
+The ‘exit’ button will close the application and the numpad will henceforth work like a regular numpad unless the application is restarted.
+ 
+
