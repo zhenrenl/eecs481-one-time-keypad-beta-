@@ -1,9 +1,9 @@
 dict_profile1.txt
 frank
-24 8 4 8 .99 white green orange pink black white No
-Switch CapsLock a b c d e f g h i j k l m n
-Switch CapsLock a b c d e f g h i j k l m n
-Switch CapsLock a b c d e f g h i j k l m n
-Switch CapsLock a b c d e f g h i j k l m n
-Switch CapsLock a b c d e f g h i j k l m n
-Switch CapsLock a b c d e f g h i j k l m n
+24 8 3 7 .99 white green orange pink black white No
+Switch CapsLock a e i b c d f g h j k l , .
+Switch CapsLock m q u n o p r s t v w x , .
+Switch CapsLock y 3 + z 1 2 4 - = ( ) * ^ /
+Switch CapsLock 5 9 + 6 7 8 0 - = ( ) * ^ /
+Switch CapsLock ` } ! [ ] { @ # $ % & _ | ?
+Switch CapsLock Tab < > ' " \ ~ ; : A B C D E

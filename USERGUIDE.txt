@@ -1,0 +1,18 @@
+HOME SCREEN LAYOUT
+Column 0: An ordered list of map IDs
+Column 1: (optional): A preview of symbols in each map
+Column 2-5: The 19 keypad symbols of the current map
+Column 6: A list of options or a list of recommended words
+
+INSTRUCTIONS
+Press NumLock ('Switch') to go to the next map.
+Hold Numlock ('Switch') and select one of 6 highlighted
+buttons to jump to the corresponding map.
+Press / ('CapsLock') to turn CapsLock on and off.
+(Note: The following four occur if the list
+of options is present in Column 6)
+Press Home ('About') to get contact information
+Press Tab ('Tutorial') to view this basic tutorial
+Press Mail ('Profiles') to create, modify,
+and switch to user profiles
+Press Calculator ('Exit') to exit the app

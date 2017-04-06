@@ -1,6 +1,6 @@
 dict_profile2.txt
 frank
-24 8 4 8 .999 white white white white white white Yes
+24 8 4 8 .999 white pink white white black white No
 Switch CapsLock a b c d e f g h i j k l m n
 Switch CapsLock a b c d e f g h i j k l m n
 Switch CapsLock a b c d e f g h i j k l m n

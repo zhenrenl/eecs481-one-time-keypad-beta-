@@ -15,6 +15,7 @@ class LIST_GUI():
     def __init__(self):
         # initialize the recommended words GUI
         self.__gui = tkinter.Tk()
+        self.__gui.resizable(width=False, height=False)
         self.loadProfile()
 
     # switches from curr profile to nextFile profile
@@ -163,7 +164,9 @@ class LIST_GUI():
             fg=self.__textfg,
             height=self.__btnHeight,
             width=self.__btnWidth,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[0]])))))
         self.__btntexts.append(
             self.__PAGES[0][self.__keyTypes[0]])
         # initialize / button
@@ -174,7 +177,9 @@ class LIST_GUI():
             fg=self.__textfg,
             height=self.__btnHeight,
             width=self.__btnWidth,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[1]])))))
         self.__btntexts.append(
             self.__PAGES[0][self.__keyTypes[1]])
         # initialize * button
@@ -185,7 +190,9 @@ class LIST_GUI():
             fg=self.__textfg,
             height=self.__btnHeight,
             width=self.__btnWidth,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[2]])))))
         self.__btntexts.append(
             self.__PAGES[0][self.__keyTypes[2]])
         # initialize - button
@@ -196,7 +203,9 @@ class LIST_GUI():
             fg=self.__textfg,
             height=self.__btnHeight,
             width=self.__btnWidth,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[3]])))))
         self.__btntexts.append(
             self.__PAGES[0][self.__keyTypes[3]])
         # initialize + button
@@ -207,7 +216,9 @@ class LIST_GUI():
             fg=self.__textfg,
             height=self.__btnHeight,
             width=self.__btnWidth,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[4]])))))
         self.__btntexts.append(
             self.__PAGES[0][self.__keyTypes[4]])
         # initialize 0 - 9 buttons
@@ -220,7 +231,9 @@ class LIST_GUI():
                 height=self.__btnHeight,
                 width=self.__btnWidth,
                 fg=self.__textfg,
-                font=self.__fonts[0]))
+                font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[q]])))))
             self.__btntexts.append(
                 self.__PAGES[0][self.__keyTypes[q]])
             q += 2
@@ -232,7 +245,9 @@ class LIST_GUI():
             width=self.__btnWidth,
             fg=self.__textfg,
             height=self.__btnHeight,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(
+                len(self.__PAGES[0][self.__keyTypes[q]])))))
         self.__btntexts.append(
             self.__PAGES[self.__SWITCH][self.__keyTypes[q]])
         # the space button
@@ -242,7 +257,8 @@ class LIST_GUI():
             height=self.__btnHeight,
             width=self.__btnWidth,
             fg=self.__textfg,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(len("Space")))))
         self.__btntexts.append("Space")
         # the back button
         self.__btns.append(tkinter.Button(
@@ -251,7 +267,8 @@ class LIST_GUI():
             fg=self.__textfg,
             width=self.__btnWidth,
             height=self.__btnHeight,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(len("Back")))))
         self.__btntexts.append("Back")
         # the enter button
         self.__btns.append(tkinter.Button(
@@ -260,16 +277,9 @@ class LIST_GUI():
             fg=self.__textfg,
             width=self.__btnWidth,
             height=self.__btnHeight,
-            font=self.__fonts[0]))
+            font=tkinter.font.Font(
+                size=self.config_font(len("Enter")))))
         self.__btntexts.append("Return")
-        # packing the 'column 2' buttons
-        self.packButtons([0, 5, 8, 11, 14], 2)
-        # packing the 'column 3' buttons
-        self.packButtons([1, 6, 9, 12, 16], 3)
-        # packing the 'column 4' buttons
-        self.packButtons([2, 7, 10, 13, 15], 4)
-        # packing the 'column 5' buttons
-        self.packButtons([17, 3, 4, 18], 5)
         # packing the 'column 6' buttons (i.e. rec list)
         idx = 0
         while idx < self.__MAGIC_NUM:
@@ -277,12 +287,17 @@ class LIST_GUI():
             self.__rec.append("")
             self.__num.append(0)
             self.__btns.append(
-                tkinter.Button(self.__frames[6],
+                tkinter.Button(self.__frames[2 + idx],
+                               height=self.__btnHeight,
+                               width=self.__btnWidth,
+                               fg=self.__textfg,
+                               bg=self.__keybg,
                                text=self.__options[idx],
-                               font=self.__fonts[0]))
+                               font=tkinter.font.Font(
+                size=self.config_font(len(self.__options[idx])))))
             self.__btntexts.append(self.__options[idx])
-            self.__btns[idx + 19].grid(row=idx, sticky="wens")
-            self.__frames[6].rowconfigure(idx, weight=1)
+            self.__btns[idx + 19].grid(row=0, sticky="wens")
+            #self.__frames[6].rowconfigure(idx, weight=1)
             idx += 1
         # packing the 'column 0' buttons (i.e. map numbers)
         for v in range(0, 6):
@@ -299,12 +314,20 @@ class LIST_GUI():
                                                         sticky="wens")
             self.__frames[0].rowconfigure(v, weight=1)
         # create wpm statistic button
-        self.__btns.append(
-            tkinter.Button(self.__frames[6], text=str(self.__num_words / self.__old_time)))
-        self.__btns[19 + self.__MAGIC_NUM + 6].grid(row=4, sticky="wens")
+        #self.__btns.append(
+        #    tkinter.Button(self.__frames[1], text=str(self.__num_words / self.__old_time)))
+        #self.__btns[19 + self.__MAGIC_NUM + 6].grid(row=4, sticky="wens")
         # add wpm btn to last row of column 6
-        self.__frames[6].rowconfigure(4)
+        #self.__frames[6].rowconfigure(4)
         # set up column 1 as preview of mapping's contents if addPreview flag is True
+        # packing the 'column 2' buttons
+        self.packButtons([19, 0, 5, 8, 11, 14], 2)
+        # packing the 'column 3' buttons
+        self.packButtons([20, 1, 6, 9, 12, 16], 3)
+        # packing the 'column 4' buttons
+        self.packButtons([21, 2, 7, 10, 13, 15], 4)
+        # packing the 'column 5' buttons
+        self.packButtons([22, 17, 3, 4, 18], 5)
         if self.__addPreviews is True:
             for j in range(0, len(self.__previews)):
                 self.__previews[j].grid(row=j, sticky="wens")
@@ -350,8 +373,8 @@ class LIST_GUI():
         # clear next_word back to the empty string
         self.__next_word = ""
         # update wpm
-        temp_time = self.__old_time + self.diffTime(self.__start_time, datetime.datetime.now().time())
-        self.__btns[19 + self.__MAGIC_NUM + 6].config(text=str(self.__num_words / temp_time))
+        #temp_time = self.__old_time + self.diffTime(self.__start_time, datetime.datetime.now().time())
+        #self.__btns[19 + self.__MAGIC_NUM + 6].config(text=str(self.__num_words / temp_time))
         # reset the recommendation word list to show options
         self.clearList()
         self.updateList(True)
@@ -409,11 +432,12 @@ class LIST_GUI():
             self.__frames[col_num].rowconfigure(idx, weight=1)
             idx += 1
         # configuring the column with 'Enter' button
-        if len(num_list) is not 5:
+        if len(num_list) is not 6:
             self.__frames[col_num].rowconfigure(0, weight=0)
             self.__frames[col_num].rowconfigure(1, weight=0)
             self.__frames[col_num].rowconfigure(2, weight=0)
-            self.__frames[col_num].rowconfigure(3, weight=1)
+            self.__frames[col_num].rowconfigure(3, weight=0)
+            self.__frames[col_num].rowconfigure(4, weight=1)
 
     # Removes all recommended words
     def clearList(self):
@@ -428,10 +452,14 @@ class LIST_GUI():
         idx = 0
         while idx < self.__MAGIC_NUM:
             if nextWordEmpty is True:
-                self.__btns[idx + 19].config(text=self.__options[idx])
+                self.__btns[idx + 19].config(text=self.__options[idx],
+                        font=tkinter.font.Font(
+                        size=self.config_font(len(self.__options[idx]))))
                 self.__btntexts[idx + 19] = self.__options[idx]
             else:
-                self.__btns[idx + 19].config(text=self.__rec[idx])
+                self.__btns[idx + 19].config(text=self.__rec[idx],
+                        font=tkinter.font.Font(
+                            size=self.config_font(len(self.__options[idx]))))
                 self.__btntexts[idx + 19] = self.__rec[idx]
             #self.__btns[idx + 19].config(bg=self.__defaultbg)
             idx += 1
@@ -476,10 +504,10 @@ class LIST_GUI():
             self.__btns[1].configure(bg=self.__keybg)
         elif flag is True and idx is not 1:
             self.__btns[idx].configure(bg=self.__flashbg)
-        elif idx is not 1 and idx in range(0, 19):
-            self.__btns[idx].configure(bg=self.__keybg)
         elif idx is not 1:
-            self.__btns[idx].configure(bg=self.__defaultbg)
+            self.__btns[idx].configure(bg=self.__keybg)
+        #elif idx is not 1 and idx in range(0, 19):
+         #   self.__btns[idx].configure(bg=self.__keybg)
 
     # TUTORIAL NOT COMPLETED.....
     def systemCall(self, optionIdx):
@@ -488,18 +516,18 @@ class LIST_GUI():
             info.start()
             info.join()
         elif optionIdx is 1:
-            tutorial = tkinter.Toplevel(self.__gui)
-            tutorial_title = tkinter.Label(tutorial, text="TUTORIAL",
-                                           font=self.__fonts[0])
-            tutorial_title.grid(row=0, sticky="wens")
+            tut = threading.Thread(target=self.tutorial)
+            tut.start()
+            tut.join()
         elif optionIdx is 2:
             profiling = threading.Thread(target=self.profile_manager)
             profiling.start()
             profiling.join()
-            print("done with prof man")
         elif optionIdx is 3:
             sys.exit()
 
+    def config_font(self, length):
+        return (self.__btnHeight * self.__btnWidth - length)
 
     def changeMapId(self, nextSwitchID):
         self.__btns[19 + self.__MAGIC_NUM +
@@ -713,6 +741,18 @@ class LIST_GUI():
         about_mem2.grid(row=4, sticky="wens")
         about_mem3.grid(row=5, sticky="wens")
         about_mem4.grid(row=6, sticky="wens")
+
+    def tutorial(self):
+        tut = tkinter.Toplevel(self.__gui)
+        tut_labels = []
+        with open("USERGUIDE.txt", "r") as read_guide:
+            contents = [line.rstrip('\n') for line in read_guide]
+            for i in range(0, len(contents)):
+                tut_labels.append(tkinter.Label(tut, text=contents[i],
+                                                font=self.__fonts[0]))
+                tut_labels[i].grid(row=i, sticky="wens")
+        read_guide.close()
+
 
     def profile_manager(self):
             self.__profman = tkinter.Toplevel(self.__gui)
